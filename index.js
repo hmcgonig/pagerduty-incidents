@@ -27,9 +27,9 @@ pagerduty.prototype.stream = function(status, services, interval) {
             if (err) return stream.emit('error', err);
             for (var i = 0; i < incidents.length; i++) {
                 var incident = incidents[i];
-                if (!seen[incident.id]) {
+                if (!seen[incident.id] || seen[incident.id].status !== incident.status) {
                     stream.push(incident);
-                    seen[incident.id] = true;
+                    seen[incident.id] = incident;
                 }
             }
             calling = false;
