@@ -13,6 +13,7 @@ module.exports = pagerduty;
 pagerduty.prototype.stream = function(status, services, interval) {
     var that = this;
     var stream = new Readable({objectMode: true});
+    var seen = {};
     var calling = false;
 
     stream._read = function() {
@@ -25,7 +26,11 @@ pagerduty.prototype.stream = function(status, services, interval) {
         that.getIncidents(status, services, function(err, incidents) {
             if (err) return stream.emit('error', err);
             for (var i = 0; i < incidents.length; i++) {
-                stream.push(incidents[i]);
+                var incident = incidents[i];
+                if (!seen[incident.id]) {
+                    stream.push(incident);
+                    seen[incident.id] = true;
+                }
             }
             calling = false;
             setTimeout(query, interval || 5000);
