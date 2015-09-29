@@ -10,10 +10,11 @@ var pagerduty = function(subdomain, token) {
 
 module.exports = pagerduty;
 
+pagerduty.prototype.incidents = {};
+
 pagerduty.prototype.stream = function(status, services, interval) {
     var that = this;
     var stream = new Readable({objectMode: true});
-    var seen = {};
     var calling = false;
 
     stream._read = function() {
@@ -23,13 +24,13 @@ pagerduty.prototype.stream = function(status, services, interval) {
 
     var query = function() {
         calling = true;
-        that.getIncidents(status, services, function(err, incidents) {
+        that.getIncidents(status, services, function(err, returnedIncidents) {
             if (err) return stream.emit('error', err);
-            for (var i = 0; i < incidents.length; i++) {
-                var incident = incidents[i];
-                if (!seen[incident.id] || seen[incident.id].status !== incident.status) {
+            for (var i = 0; i < returnedIncidents.length; i++) {
+                var incident = returnedIncidents[i];
+                if (!that.incidents[incident.id] || that.incidents[incident.id].status !== incident.status) {
                     stream.push(incident);
-                    seen[incident.id] = incident;
+                    that.incidents[incident.id] = incident;
                 }
             }
             calling = false;
